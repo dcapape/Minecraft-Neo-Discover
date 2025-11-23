@@ -44,6 +44,8 @@ jobs:
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.get_version.outputs.version }}
         name: Release ${{ steps.get_version.outputs.version }}
@@ -60,3 +62,4 @@ jobs:
         files: ./build/libs/neodiscover-1.0.0.jar
         draft: false
         prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
