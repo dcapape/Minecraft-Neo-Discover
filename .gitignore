@@ -47,6 +47,4 @@ eclipse/
 neodiscover_config.txt
 
 # Server folder
-server/
-
-server/
+/server/
