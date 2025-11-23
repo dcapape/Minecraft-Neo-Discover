@@ -1,0 +1,11 @@
+modLoader="javafml"
+loaderVersion="[4.0,)"
+license="MIT"
+
+[[mods]]
+modId="neodiscover"
+version="1.0.0"
+displayName="NeoDiscover Server"
+description="Plugin de servidor que expone información del servidor en formato JSON a través de HTTP"
+authors="NeoDiscover Team"
+
