@@ -19,7 +19,7 @@ A server-side plugin for NeoForge that exposes server information via HTTP endpo
 
 ## Installation
 
-1. Download the latest release JAR from the [Releases](https://github.com/YOUR_USERNAME/Minecraft-Neo-Discover/releases) page
+1. Download the latest release JAR from the [Releases](https://github.com/dcapape/Minecraft-Neo-Discover/releases) page
 2. Copy the JAR file to the `mods` folder of your NeoForge server
 3. Start the server. The plugin will initialize automatically.
 
