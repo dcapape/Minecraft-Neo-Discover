@@ -448,14 +448,9 @@ public class ServerInfoCollector {
     private JsonObject createServerConfig() {
         JsonObject config = new JsonObject();
         
-        String serverIp = configManager.getConfigValue("server_ip");
-        if (serverIp == null && server != null && server instanceof DedicatedServer dedicatedServer) {
-            serverIp = dedicatedServer.getLocalIp();
-            if (serverIp == null || serverIp.isEmpty()) {
-                serverIp = "localhost";
-            }
-        }
-        config.addProperty("server_ip", serverIp != null ? serverIp : "servidormc.com");
+        // Usar el mismo método getServerHost() que ya funciona correctamente
+        String serverIp = getServerHost();
+        config.addProperty("server_ip", serverIp);
         
         int serverPort = 25565;
         if (server != null && server instanceof DedicatedServer dedicatedServer) {

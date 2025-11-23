@@ -4,7 +4,7 @@ license="MIT"
 
 [[mods]]
 modId="neodiscover"
-version="1.0.1"
+version="1.0.2"
 displayName="NeoDiscover Server"
 description="Plugin de servidor que expone información del servidor en formato JSON a través de HTTP"
 authors="NeoDiscover Team"
