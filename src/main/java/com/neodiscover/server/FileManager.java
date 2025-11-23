@@ -17,15 +17,22 @@ public class FileManager {
     private Path downloadsPath;
     private MinecraftServer server;
     private int httpPort;
+    private String serverHost;
 
     public FileManager(int httpPort) {
         this.httpPort = httpPort;
+        this.serverHost = "localhost"; // Valor por defecto
         String serverDir = System.getProperty("user.dir");
         if (serverDir != null) {
             downloadsPath = Paths.get(serverDir, DOWNLOADS_FOLDER);
         } else {
             downloadsPath = Paths.get(DOWNLOADS_FOLDER);
         }
+    }
+
+    public void setServerHost(String host) {
+        this.serverHost = host != null && !host.isEmpty() ? host : "localhost";
+        NeoDiscover.LOGGER.info("Server host establecido en: {}", this.serverHost);
     }
 
     public void setServer(MinecraftServer server) {
@@ -97,11 +104,11 @@ public class FileManager {
     }
 
     public String getShaderUrl(String shaderFileName) {
-        return String.format("http://localhost:%d/downloads/shaders/%s", httpPort, shaderFileName);
+        return String.format("http://%s:%d/downloads/shaders/%s", serverHost, httpPort, shaderFileName);
     }
 
     public String getResourcePackUrl(String rpFileName) {
-        return String.format("http://localhost:%d/downloads/resourcepacks/%s", httpPort, rpFileName);
+        return String.format("http://%s:%d/downloads/resourcepacks/%s", serverHost, httpPort, rpFileName);
     }
 
     public Path getDownloadsPath() {
@@ -139,11 +146,11 @@ public class FileManager {
     }
 
     public String getFileUrl(String fileName) {
-        return String.format("http://localhost:%d/downloads/%s", httpPort, fileName);
+        return String.format("http://%s:%d/downloads/%s", serverHost, httpPort, fileName);
     }
 
     public String getModUrl(String modFileName) {
-        return String.format("http://localhost:%d/downloads/mods/%s", httpPort, modFileName);
+        return String.format("http://%s:%d/downloads/mods/%s", serverHost, httpPort, modFileName);
     }
 }
 

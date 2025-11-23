@@ -1,23 +1,22 @@
 package com.neodiscover.server;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModList;
-import com.neodiscover.NeoDiscover;
-import com.neodiscover.config.ConfigManager;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.world.level.storage.LevelResource;
-import net.neoforged.neoforge.common.NeoForge;
-
-import java.io.File;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.neodiscover.NeoDiscover;
+import com.neodiscover.config.ConfigManager;
+
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedServer;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 
 public class ServerInfoCollector {
     private final ConfigManager configManager;
@@ -39,6 +38,12 @@ public class ServerInfoCollector {
     public JsonObject collectServerInfo() {
         // Recargar configuración para obtener los valores más recientes
         configManager.loadConfig();
+        
+        // Obtener y establecer la IP/hostname del servidor para FileManager
+        String serverHost = getServerHost();
+        if (fileManager != null) {
+            fileManager.setServerHost(serverHost);
+        }
         
         // Debug: verificar qué valores tiene la configuración
         com.google.gson.JsonObject configData = configManager.getConfigData();
@@ -67,6 +72,92 @@ public class ServerInfoCollector {
         root.add("profiles", profiles);
         
         return root;
+    }
+
+    private String getServerHost() {
+        // 1. Intentar obtener de la configuración (config.server_ip) - PRIORIDAD MÁXIMA
+        com.google.gson.JsonElement configElement = configManager.getConfigElement("config");
+        if (configElement != null && configElement.isJsonObject()) {
+            com.google.gson.JsonObject configObj = configElement.getAsJsonObject();
+            if (configObj.has("server_ip")) {
+                String configIp = configObj.get("server_ip").getAsString();
+                if (configIp != null && !configIp.isEmpty()) {
+                    // Si es "localhost", intentar obtener IP pública automáticamente
+                    if (configIp.equals("localhost")) {
+                        String publicIp = getPublicIp();
+                        if (publicIp != null && !publicIp.isEmpty()) {
+                            NeoDiscover.LOGGER.info("Server IP configurado como 'localhost', usando IP pública detectada: {}", publicIp);
+                            return publicIp;
+                        }
+                        NeoDiscover.LOGGER.info("Server IP desde configuración (config.server_ip): localhost");
+                        return "localhost";
+                    }
+                    NeoDiscover.LOGGER.info("Server IP desde configuración (config.server_ip): {}", configIp);
+                    return configIp;
+                }
+            }
+        }
+        
+        // 2. Intentar obtener directamente de la configuración (server_ip en raíz)
+        String configIp = configManager.getConfigValue("server_ip");
+        if (configIp != null && !configIp.isEmpty()) {
+            // Si es "localhost", intentar obtener IP pública automáticamente
+            if (configIp.equals("localhost")) {
+                String publicIp = getPublicIp();
+                if (publicIp != null && !publicIp.isEmpty()) {
+                    NeoDiscover.LOGGER.info("Server IP configurado como 'localhost', usando IP pública detectada: {}", publicIp);
+                    return publicIp;
+                }
+            }
+            NeoDiscover.LOGGER.info("Server IP desde configuración (raíz): {}", configIp);
+            return configIp;
+        }
+        
+        // 3. Intentar obtener IP pública automáticamente (solo si no hay configuración)
+        String publicIp = getPublicIp();
+        if (publicIp != null && !publicIp.isEmpty()) {
+            NeoDiscover.LOGGER.info("IP pública detectada automáticamente: {}", publicIp);
+            return publicIp;
+        }
+        
+        // 4. Fallback a localhost
+        NeoDiscover.LOGGER.info("Usando localhost como fallback");
+        return "localhost";
+    }
+
+    private String getPublicIp() {
+        // Lista de servicios para obtener IP pública
+        String[] services = {
+            "https://api.ipify.org",
+            "https://icanhazip.com",
+            "https://ifconfig.me/ip",
+            "https://checkip.amazonaws.com"
+        };
+        
+        for (String service : services) {
+            try {
+                URL url = new URL(service);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(3000);
+                connection.setReadTimeout(3000);
+                connection.setRequestMethod("GET");
+                
+                try (InputStream inputStream = connection.getInputStream();
+                     Scanner scanner = new Scanner(inputStream).useDelimiter("\\A")) {
+                    if (scanner.hasNext()) {
+                        String ip = scanner.next().trim();
+                        // Validar que sea una IP válida
+                        if (ip.matches("^([0-9]{1,3}\\.){3}[0-9]{1,3}$")) {
+                            return ip;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                NeoDiscover.LOGGER.debug("No se pudo obtener IP pública desde {}: {}", service, e.getMessage());
+            }
+        }
+        
+        return null;
     }
 
     private String getServerName() {
